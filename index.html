@@ -1,46 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>WebXR AR Cube</title>
-    <style>
-      body { margin: 0; overflow: hidden; }
-      canvas { display: block; }
-    </style>
-    <!-- Include Three.js and WebXR polyfill -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/vr/WebXRPolyfill.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/vr/WebXRManager.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/vr/WebXRButton.js"></script>
-  </head>
-  <body>
-    <script>
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-      const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+<head>
+  <meta charset="UTF-8" />
+  <title>WebXR AR on GitHub Pages</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
+    button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      z-index: 10;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+</head>
+<body>
+  <button id="enter-ar">Enter AR</button>
+
+  <script>
+    let scene, camera, renderer, cube;
+
+    async function initAR() {
+      if (!navigator.xr) {
+        alert("WebXR not supported");
+        return;
+      }
+
+      const supported = await navigator.xr.isSessionSupported('immersive-ar');
+      if (!supported) {
+        alert("AR mode not supported on this device");
+        return;
+      }
+
+      const session = await navigator.xr.requestSession('immersive-ar', {
+        requiredFeatures: ['local']
+      });
+
+      setupThreeJS(session);
+    }
+
+    function setupThreeJS(session) {
+      scene = new THREE.Scene();
+      camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.xr.enabled = true;
+      renderer.xr.setSession(session);
       document.body.appendChild(renderer.domElement);
 
+      // Lights
       const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-      light.position.set(0.5, 1, 0.25);
       scene.add(light);
 
-      const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+      // Cube in front of the user
+      const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
       const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-      const cube = new THREE.Mesh(geometry, material);
-      cube.position.set(0, 0, -0.5); // Fixed position in front of user
+      cube = new THREE.Mesh(geometry, material);
+      cube.position.set(0, 0, -1); // 1 meter in front
       scene.add(cube);
-
-      document.body.appendChild(THREE.WebXRButton.createButton(renderer, {
-        optionalFeatures: ['local-floor', 'bounded-floor'],
-        requiredFeatures: ['hit-test']
-      }));
 
       renderer.setAnimationLoop(() => {
         cube.rotation.y += 0.01;
         renderer.render(scene, camera);
       });
-    </script>
-  </body>
+    }
+
+    document.getElementById('enter-ar').addEventListener('click', initAR);
+  </script>
+</body>
 </html>
