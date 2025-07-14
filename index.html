@@ -35,9 +35,16 @@
         return;
       }
 
-      const session = await navigator.xr.requestSession('immersive-ar', {
-        requiredFeatures: ['local']
-      });
+      try {
+  const session = await navigator.xr.requestSession('immersive-ar', {
+    requiredFeatures: ['local']
+  });
+  setupThreeJS(session);
+} catch (err) {
+  alert("AR session failed to start: " + err.message);
+  console.error("AR session error:", err);
+}
+
 
       setupThreeJS(session);
     }
