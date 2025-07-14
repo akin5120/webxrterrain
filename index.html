@@ -1,92 +1,38 @@
-<!-- WebXR + Three.js + Voice Control AR Starter -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>AR Terrain Demo</title>
+    <title>Three.js Test</title>
     <style>
-      body { margin: 0; overflow: hidden; }
+      body { margin: 0; }
       canvas { display: block; }
     </style>
   </head>
   <body>
     <script type="module">
       import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-      import { XRControllerModelFactory } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/webxr/XRControllerModelFactory.js';
-      import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
-      let camera, scene, renderer;
+      let scene = new THREE.Scene();
+      let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      let renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
 
-      init();
-      animate();
+      const geometry = new THREE.BoxGeometry();
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
 
-      function init() {
-        scene = new THREE.Scene();
-
-        camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
-
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.xr.enabled = true;
-        document.body.appendChild(renderer.domElement);
-        document.body.appendChild(VRButton.createButton(renderer));
-
-        const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
-        light.position.set(0.5, 1, 0.25);
-        scene.add(light);
-
-        // Terrain Placeholder
-        const geometry = new THREE.ConeGeometry(0.2, 0.3, 32, 1, true);
-        const material = new THREE.MeshBasicMaterial({ color: 0xffffff, wireframe: true });
-        const terrain = new THREE.Mesh(geometry, material);
-        terrain.rotation.x = Math.PI;
-        terrain.position.set(0, 0, -0.6);
-        scene.add(terrain);
-
-        // Voice command: Move terrain up/down
-        setupVoiceCommands(terrain);
-      }
+      camera.position.z = 2;
 
       function animate() {
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
+        requestAnimationFrame(animate);
+        cube.rotation.x += 0.01;
+        cube.rotation.y += 0.01;
+        renderer.render(scene, camera);
       }
 
-      function setupVoiceCommands(objectToMove) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
-          console.warn('SpeechRecognition not supported');
-          return;
-        }
-
-        const recognition = new SpeechRecognition();
-        recognition.continuous = true;
-        recognition.interimResults = false;
-        recognition.lang = 'en-US';
-
-        recognition.onresult = (event) => {
-          const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
-          console.log('Voice command:', transcript);
-
-          if (transcript.includes('up')) {
-            objectToMove.position.y += 0.05;
-          } else if (transcript.includes('down')) {
-            objectToMove.position.y -= 0.05;
-          } else if (transcript.includes('reset')) {
-            objectToMove.position.y = 0;
-          }
-        };
-
-        recognition.onerror = (event) => {
-          console.error('Speech recognition error', event.error);
-        };
-
-        recognition.start();
-      }
-
-      // WebXR button
-      import { VRButton } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/webxr/VRButton.js';
+      animate();
     </script>
   </body>
 </html>
